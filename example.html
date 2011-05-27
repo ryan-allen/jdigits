@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- deps -->
+    <script src="jquery-1.6.1.min.js"></script>
+    <script src="underscore-min.js"></script>
+    <!-- library -->
+    <script>
+      $.jdigits = function() {
+        var initialized = false
+        var combinations = []
+        var sequences = []
+        var specialKeys = {
+          13: 'enter', 
+          17: 'control', 
+          18: 'alt', 
+          91: 'command', 
+          18: 'option', 
+          32: 'spacebar', 
+          16: 'shift', 
+           9: 'tab', 
+          37: 'left', 
+          39: 'right', 
+          38: 'up', 
+          40: 'down'
+        }
+        var api = {}
+        var initialize = function() {
+          if (!initialized) {
+            var keyCodeToString = function(keyCode) { // figure out 'a' or 'b' or ';' or 'enter' or 'option', etc.
+              var specialKey = specialKeys[keyCode]
+              if (specialKey) {
+                return specialKey
+              } else {
+                return String.fromCharCode(keyCode).toLowerCase()
+              }
+            }
+
+            $(document).keydown(function(e) {
+              matcher.registerDown(keyCodeToString(e.keyCode)) 
+            })
+
+            $(document).keyup(function(e) {
+              matcher.registerUp(keyCodeToString(e.keyCode))
+            })
+
+            initialized = true
+          }
+        }
+        var matcher = function() {
+          var state = []
+          var api = {}
+          api.registerUp = function(key) {
+            alert(key)
+            // hard work here
+            // mapping of keys to numbers, how?
+          }
+
+          api.registerDown = function(key) {
+          }
+
+          api.matched = function() {
+            // hard work here, have to inspect state
+          }
+
+          api.match = function() {
+            // hard work here, maybe, have to return the matched rule and callback
+          }
+          return api
+        }()
+
+        api.combo = function(combo, callback) {
+          initialize()
+        }
+
+        api.sequence = function(sequence, callback) {
+          initialize()
+        }
+
+        api.combination = api.combo
+        return api
+      }()
+    </script>
+    <!-- api -->
+    <script>
+      var alerter = function(type, inputs) {
+        alert(type) // i.e. 'sequence'
+        alert(inputs) // i.e. ['abc']
+      }
+      $.jdigits.sequence(['a', 'b', 'c'], alerter)
+      $.jdigits.sequence(['a', 'b', 'd'], alerter)
+      $.jdigits.sequence(['a', 'b', 'c', 'd'], alerter)
+      //$.jdigits.combination(['control', 'shift', 't'], )
+      //$.jdigits.sequence('abc', alerter) // expand on string based input
+
+    </script>
+  </head>
+  <body>
+  </body>
+</html
