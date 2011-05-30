@@ -3,6 +3,7 @@
   <head>
     <!-- deps -->
     <script src="jquery-1.6.1.min.js"></script>
+    <script src="jquery.inspect.js"></script>
     <script src="underscore-min.js"></script>
     <!-- library -->
     <script>
@@ -10,91 +11,112 @@
         var initialized = false
         var combinations = []
         var sequences = []
-        var specialKeys = {
-          13: 'enter', 
-          17: 'control', 
-          18: 'alt', 
-          91: 'command', 
-          18: 'option', 
-          32: 'spacebar', 
-          16: 'shift', 
-           9: 'tab', 
-          37: 'left', 
-          39: 'right', 
-          38: 'up', 
-          40: 'down'
-        }
         var api = {}
+        var specialKeys = {
+          'enter': 13, 
+          'control': 17, 
+          'alt': 18, 
+          'command': 91, 
+          'option': 18, 
+          'spacebar': 32, 
+          'shift': 16, 
+          'tab': 9, 
+          'left': 37, 
+          'right': 39, 
+          'up': 38, 
+          'down': 40
+        }
+
         var initialize = function() {
           if (!initialized) {
-            var keyCodeToString = function(keyCode) { // figure out 'a' or 'b' or ';' or 'enter' or 'option', etc.
-              var specialKey = specialKeys[keyCode]
-              if (specialKey) {
-                return specialKey
-              } else {
-                return String.fromCharCode(keyCode).toLowerCase()
-              }
-            }
 
             $(document).keydown(function(e) {
-              matcher.registerDown(keyCodeToString(e.keyCode)) 
+              matcher.registerDown(e.keyCode) 
+              matcher.ping()
+              return true
             })
 
             $(document).keyup(function(e) {
-              matcher.registerUp(keyCodeToString(e.keyCode))
+              matcher.registerUp(e.keyCode)
+              return true
             })
 
             initialized = true
           }
         }
+
         var matcher = function() {
-          var state = []
+          var sequence = []  // store the sequence of keys TODO implement this in matcher
+          var combination = [] // store the keys that are down
           var api = {}
-          api.registerUp = function(key) {
-            alert(key)
-            // hard work here
-            // mapping of keys to numbers, how?
-          }
 
           api.registerDown = function(key) {
+            sequence.push(key)
+            combination.push(key)
+            // keydown repeat fires if regular keys are held down, so we're
+            // removing the duplicate values, see:
+            // http://quirksmode.org/dom/events/keys.html
+            combination = _(combination).uniq()
+            $('pre').prepend('DOWN: ' + key.toString() + '<br />') // TODO remove
           }
 
-          api.matched = function() {
-            // hard work here, have to inspect state
+          api.registerUp = function(key) {
+            // TODO trim the sequence to the max length of sequences so we don't have a huge list!
+            combination = _.select(combination, function(el) { return el != key })
+            $('pre').prepend('UP: ' + key.toString() + '<br />') // TODO remove
           }
 
-          api.match = function() {
-            // hard work here, maybe, have to return the matched rule and callback
+          api.ping = function() {
+            // TODO inspect the sequence and look for a match
+            _(combinations).each(function(c) {
+              if (_.isEqual(c.keys.sort(), combination.sort())) { // TODO optimise
+                c.callback() // TODO figure out what to pass in
+              }
+            })
           }
+
           return api
         }()
 
-        api.combo = function(combo, callback) {
+        var convertArrayOfCharsToCodes = function(chars) {
+          return _(chars).map(function(key) {
+            if (specialKeys[key]) {
+              return specialKeys[key]
+            } else {
+              return key.toUpperCase().charCodeAt(0)
+            }
+          })
+        }
+
+        api.combination = function(combination, callback) {
           initialize()
+          combinations.push({keys: convertArrayOfCharsToCodes(combination), callback: callback})
         }
 
         api.sequence = function(sequence, callback) {
           initialize()
+          sequences.push(convertArrayOfCharsToCodes(sequence))
         }
 
-        api.combination = api.combo
         return api
       }()
     </script>
     <!-- api -->
     <script>
-      var alerter = function(type, inputs) {
-        alert(type) // i.e. 'sequence'
-        alert(inputs) // i.e. ['abc']
-      }
-      $.jdigits.sequence(['a', 'b', 'c'], alerter)
-      $.jdigits.sequence(['a', 'b', 'd'], alerter)
-      $.jdigits.sequence(['a', 'b', 'c', 'd'], alerter)
-      //$.jdigits.combination(['control', 'shift', 't'], )
-      //$.jdigits.sequence('abc', alerter) // expand on string based input
+      $.jdigits.combination(['w', 'e'], function() { $('pre').prepend('MATCHED: w+e<br />') })
+      $.jdigits.combination(['a', 's'], function() { $('pre').prepend('MATCHED: a+s<br />') })
+      $.jdigits.combination(['control', 'shift', 'i'], function() { $('pre').prepend('MATCHED: control+shift+i<br />') })
+      $.jdigits.combination(['shift', 'left'], function() { $('pre').prepend('MATCHED: shift+left<br />') })
+      $.jdigits.combination(['shift', 'right'], function() { $('pre').prepend('MATCHED: shift+right<br />') })
 
+      // TODO implement
+      //$.jdigits.sequence(['a', 'b', 'c'], alerter)
+      //$.jdigits.sequence(['a', 'b', 'd'], alerter)
+      //$.jdigits.sequence(['a', 'b', 'c', 'd'], alerter)
+      //$.jdigits.sequence('abc', alerter) // expand on string based input
     </script>
   </head>
   <body>
-  </body>
-</html
+    <pre></pre>
+  </body> 
+</html>
